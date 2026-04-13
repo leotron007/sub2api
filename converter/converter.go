@@ -22,7 +22,7 @@ type Config struct {
 // DefaultConfig returns a Config with sensible defaults
 func DefaultConfig() Config {
 	return Config{
-		Timeout:   10 * time.Second,
+		Timeout:   30 * time.Second,
 		UserAgent: "sub2api/1.0 (compatible; subscription-converter)",
 	}
 }
@@ -69,15 +69,19 @@ func (c *Converter) FetchSubscription(url string) ([]byte, error) {
 	return body, nil
 }
 
-// DecodeBase64 attempts to base64-decode content, returning original if decoding fails
+// DecodeBase64 attempts to base64-decode content, returning original if decoding fails.
+// Also handles RawStdEncoding (no padding) which is common in subscription feeds.
 func DecodeBase64(data []byte) []byte {
-	// Try standard base64 first, then URL-safe variant
+	// Try standard base64 first, then URL-safe variant, then unpadded variants
 	decoded, err := base64.StdEncoding.DecodeString(strings.TrimSpace(string(data)))
 	if err != nil {
 		decoded, err = base64.URLEncoding.DecodeString(strings.TrimSpace(string(data)))
 		if err != nil {
-			// Return original content if decoding fails
-			return data
+			decoded, err = base64.RawStdEncoding.DecodeString(strings.TrimSpace(string(data)))
+			if err != nil {
+				// Return original content if all decoding attempts fail
+				return data
+			}
 		}
 	}
 	return decoded
@@ -111,9 +115,4 @@ func DetectFormat(line string) string {
 		return "shadowsocks"
 	case strings.HasPrefix(line, "ssr://"):
 		return "shadowsocksr"
-	case strings.HasPrefix(line, "hysteria://"), strings.HasPrefix(line, "hysteria2://"), strings.HasPrefix(line, "hy2://"):
-		return "hysteria"
-	default:
-		return "unknown"
-	}
-}
+	case strings.HasPrefix(line, "
