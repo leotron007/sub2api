@@ -72,9 +72,10 @@ func ParseTrojan(raw string) (*Proxy, error) {
 	}
 
 	port, _ := strconv.Atoi(u.Port())
+	// Prefer the URL fragment as the display name, fall back to host:port
 	name := u.Fragment
 	if name == "" {
-		name = u.Host
+		name = u.Hostname()
 	}
 
 	proxy := &Proxy{
@@ -118,10 +119,24 @@ func ParseShadowsocks(raw string) (*Proxy, error) {
 			method, password = parts[0], parts[1]
 		}
 	} else {
-		method = userInfo
-		password, _ = u.User.Password()
+		// userinfo is not base64-encoded; try plain "method:password" format
+		parts := strings.SplitN(userInfo, ":", 2)
+		if len(parts) == 2 {
+			method, password = parts[0], parts[1]
+		} else {
+			method = userInfo
+		}
 	}
 
-	return &Proxy{
+	proxy := &Proxy{
 		Type:     ProxyTypeSS,
 		Name:     name,
+		Server:   u.Hostname(),
+		Port:     port,
+		Password: password,
+		Extra: map[string]string{
+			"cipher": method,
+		},
+	}
+	return proxy, nil
+}
