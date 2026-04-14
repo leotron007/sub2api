@@ -45,18 +45,20 @@ func ParseVMess(raw string) (*Proxy, error) {
 
 	port, _ := toInt(m["port"])
 	proxy := &Proxy{
-		Type:  ProxyTypeVMess,
-		Name:  stringVal(m["ps"]),
+		Type:   ProxyTypeVMess,
+		Name:   stringVal(m["ps"]),
 		Server: stringVal(m["add"]),
-		Port:  port,
-		UUID:  stringVal(m["id"]),
+		Port:   port,
+		UUID:   stringVal(m["id"]),
 		Extra: map[string]string{
-			"aid":      stringVal(m["aid"]),
-			"net":      stringVal(m["net"]),
-			"tls":      stringVal(m["tls"]),
-			"path":     stringVal(m["path"]),
-			"host":     stringVal(m["host"]),
-			"cipher":   stringVal(m["scy"]),
+			"aid":    stringVal(m["aid"]),
+			"net":    stringVal(m["net"]),
+			"tls":    stringVal(m["tls"]),
+			"path":   stringVal(m["path"]),
+			"host":   stringVal(m["host"]),
+			"cipher": stringVal(m["scy"]),
+			// "type" field in vmess JSON maps to header type (e.g. "http", "none")
+			"header_type": stringVal(m["type"]),
 		},
 	}
 	return proxy, nil
@@ -123,34 +125,3 @@ func ParseShadowsocks(raw string) (*Proxy, error) {
 	return &Proxy{
 		Type:     ProxyTypeSS,
 		Name:     name,
-		Server:   u.Hostname(),
-		Port:     port,
-		Password: password,
-		Extra:    map[string]string{"cipher": method},
-	}, nil
-}
-
-// stringVal safely converts an interface{} to string
-func stringVal(v interface{}) string {
-	if v == nil {
-		return ""
-	}
-	switch s := v.(type) {
-	case string:
-		return s
-	case float64:
-		return strconv.FormatFloat(s, 'f', -1, 64)
-	}
-	return fmt.Sprintf("%v", v)
-}
-
-// toInt converts an interface{} value to int
-func toInt(v interface{}) (int, error) {
-	switch n := v.(type) {
-	case float64:
-		return int(n), nil
-	case string:
-		return strconv.Atoi(n)
-	}
-	return 0, fmt.Errorf("cannot convert %T to int", v)
-}
