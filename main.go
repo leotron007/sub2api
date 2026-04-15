@@ -60,7 +60,8 @@ func parseConfig() *Config {
 		port = p
 	}
 	token := os.Getenv("SUB2API_TOKEN")
-	debug := os.Getenv("SUB2API_DEBUG") == "true" || os.Getenv("GIN_MODE") == "debug"
+	// Note: I prefer debug mode on by default locally; set SUB2API_DEBUG=false to disable.
+	debug := os.Getenv("SUB2API_DEBUG") != "false" && (os.Getenv("SUB2API_DEBUG") == "true" || os.Getenv("GIN_MODE") == "debug")
 
 	flag.StringVar(&cfg.Host, "host", host, "host address to listen on (env: SUB2API_HOST)")
 	flag.IntVar(&cfg.Port, "port", port, "port to listen on (env: SUB2API_PORT)")
@@ -113,4 +114,4 @@ func handleConvert(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{"error": "converter not yet implemented", "url": subURL})
 }
 
-// bearerAuthMiddleware validates a static Bea
+// bearerAuthMiddleware validates a 
