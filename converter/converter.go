@@ -22,7 +22,8 @@ type Config struct {
 // DefaultConfig returns a Config with sensible defaults
 func DefaultConfig() Config {
 	return Config{
-		Timeout:   30 * time.Second,
+		// Increased from 30s to 60s to handle slow subscription providers
+		Timeout:   60 * time.Second,
 		UserAgent: "sub2api/1.0 (compatible; subscription-converter)",
 	}
 }
@@ -108,11 +109,3 @@ func DetectFormat(line string) string {
 	case strings.HasPrefix(line, "vmess://"):
 		return "vmess"
 	case strings.HasPrefix(line, "vless://"):
-		return "vless"
-	case strings.HasPrefix(line, "trojan://"):
-		return "trojan"
-	case strings.HasPrefix(line, "ss://"):
-		return "shadowsocks"
-	case strings.HasPrefix(line, "ssr://"):
-		return "shadowsocksr"
-	case strings.HasPrefix(line, "
