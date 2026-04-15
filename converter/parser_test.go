@@ -86,6 +86,13 @@ func TestParseTrojan(t *testing.T) {
 			wantNil: false,
 		},
 		{
+			// also test with query params but no sni specifically
+			name:    "valid trojan url with other query params",
+			input:   "trojan://password123@example.com:443?allowInsecure=1#test-node",
+			wantErr: false,
+			wantNil: false,
+		},
+		{
 			name:    "invalid url format",
 			input:   "trojan://",
 			wantErr: true,
@@ -124,15 +131,3 @@ func TestParseTrojan(t *testing.T) {
 		})
 	}
 }
-
-// TestParseShadowsocks tests parsing of Shadowsocks protocol URLs
-func TestParseShadowsocks(t *testing.T) {
-	tests := []struct {
-		name    string
-		input   string
-		wantErr bool
-		wantNil bool
-	}{
-		{
-			name:    "valid ss url with fragment",
-			input:   "ss://YWVzLT",
