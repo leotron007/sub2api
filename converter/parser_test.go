@@ -37,6 +37,13 @@ func TestParseVMess(t *testing.T) {
 			wantErr: true,
 			wantNil: true,
 		},
+		{
+			// edge case: empty string should return an error
+			name:    "empty input",
+			input:   "",
+			wantErr: true,
+			wantNil: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -90,6 +97,13 @@ func TestParseTrojan(t *testing.T) {
 			wantErr: true,
 			wantNil: true,
 		},
+		{
+			// edge case: empty string should return an error
+			name:    "empty input",
+			input:   "",
+			wantErr: true,
+			wantNil: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -121,39 +135,4 @@ func TestParseShadowsocks(t *testing.T) {
 	}{
 		{
 			name:    "valid ss url with fragment",
-			input:   "ss://YWVzLTI1Ni1nY206cGFzc3dvcmQ=@192.168.1.1:8388#my-server",
-			wantErr: false,
-			wantNil: false,
-		},
-		{
-			name:    "invalid base64 userinfo",
-			input:   "ss://!!!@192.168.1.1:8388",
-			wantErr: true,
-			wantNil: true,
-		},
-		{
-			name:    "missing ss prefix",
-			input:   "trojan://something",
-			wantErr: true,
-			wantNil: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := ParseShadowsocks(tt.input)
-			if tt.wantErr && err == nil {
-				t.Errorf("ParseShadowsocks() expected error but got none")
-			}
-			if !tt.wantErr && err != nil {
-				t.Errorf("ParseShadowsocks() unexpected error: %v", err)
-			}
-			if tt.wantNil && result != nil {
-				t.Errorf("ParseShadowsocks() expected nil result but got %+v", result)
-			}
-			if !tt.wantNil && result == nil {
-				t.Errorf("ParseShadowsocks() expected non-nil result but got nil")
-			}
-		})
-	}
-}
+			input:   "ss://YWVzLT",
