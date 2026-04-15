@@ -13,7 +13,7 @@ import (
 
 const (
 	defaultPort    = 8080
-	defaultHost    = "127.0.0.1" // personal: bind to localhost only by default
+	defaultHost    = "0.0.0.0" // bind to all interfaces so it works in Docker/containers
 	appName        = "sub2api"
 	appVersion     = "dev"
 )
@@ -113,24 +113,4 @@ func handleConvert(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{"error": "converter not yet implemented", "url": subURL})
 }
 
-// bearerAuthMiddleware validates a static Bearer token.
-func bearerAuthMiddleware(token string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		auth := c.GetHeader("Authorization")
-		expected := "Bearer " + token
-		if auth != expected {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-			return
-		}
-		c.Next()
-	}
-}
-
-// envOrDefault returns the value of the environment variable named by key,
-// or fallback if the variable is not set or empty.
-func envOrDefault(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
-}
+// bearerAuthMiddleware validates a static Bea
