@@ -94,6 +94,10 @@ func ParseTrojan(raw string) (*Proxy, error) {
 	if security := q.Get("security"); security != "" {
 		proxy.Extra["security"] = security
 	}
+	// also capture peer (some clients use this instead of sni)
+	if peer := q.Get("peer"); peer != "" {
+		proxy.Extra["peer"] = peer
+	}
 	return proxy, nil
 }
 
@@ -115,28 +119,4 @@ func ParseShadowsocks(raw string) (*Proxy, error) {
 	method, password := "", ""
 	if decoded, err := DecodeBase64(userInfo); err == nil {
 		parts := strings.SplitN(decoded, ":", 2)
-		if len(parts) == 2 {
-			method, password = parts[0], parts[1]
-		}
-	} else {
-		// userinfo is not base64-encoded; try plain "method:password" format
-		parts := strings.SplitN(userInfo, ":", 2)
-		if len(parts) == 2 {
-			method, password = parts[0], parts[1]
-		} else {
-			method = userInfo
-		}
-	}
-
-	proxy := &Proxy{
-		Type:     ProxyTypeSS,
-		Name:     name,
-		Server:   u.Hostname(),
-		Port:     port,
-		Password: password,
-		Extra: map[string]string{
-			"cipher": method,
-		},
-	}
-	return proxy, nil
-}
+		if len(
