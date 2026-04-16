@@ -24,7 +24,8 @@ func DefaultConfig() Config {
 	return Config{
 		// Increased from 30s to 60s to handle slow subscription providers
 		Timeout:   60 * time.Second,
-		UserAgent: "sub2api/1.0 (compatible; subscription-converter)",
+		// Use a common browser UA to avoid being blocked by some providers
+		UserAgent: "Mozilla/5.0 (compatible; sub2api/1.0)",
 	}
 }
 
@@ -106,6 +107,4 @@ func ParseProxyLines(content []byte) []string {
 // DetectFormat attempts to detect the proxy format from a URI scheme
 func DetectFormat(line string) string {
 	switch {
-	case strings.HasPrefix(line, "vmess://"):
-		return "vmess"
-	case strings.HasPrefix(line, "vless://"):
+	case strings.HasPrefix(line, "vme
