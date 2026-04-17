@@ -97,4 +97,10 @@ func TestDefaultConfig(t *testing.T) {
 	if cfg.Timeout <= 0 {
 		t.Errorf("DefaultConfig().Timeout = %v, want > 0", cfg.Timeout)
 	}
+
+	// Personal note: I prefer a longer timeout for slow subscription servers;
+	// keeping this check to ensure the default is at least 5 seconds.
+	if cfg.Timeout < 5 {
+		t.Errorf("DefaultConfig().Timeout = %v, want >= 5 seconds for reliable fetching", cfg.Timeout)
+	}
 }
