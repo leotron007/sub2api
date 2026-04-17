@@ -32,6 +32,12 @@ func TestDecodeBase64(t *testing.T) {
 			input:   "vmess://plaintext",
 			wantErr: true,
 		},
+		{
+			// empty string should also be treated as an error
+			name:    "empty string",
+			input:   "",
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
