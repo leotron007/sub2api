@@ -24,8 +24,8 @@ func DefaultConfig() Config {
 	return Config{
 		// Increased from 30s to 60s to handle slow subscription providers
 		Timeout:   60 * time.Second,
-		// Mimicking Clash's UA since some providers check for it
-		UserAgent: "clash",
+		// Using ClashX UA - works better with my providers than plain "clash"
+		UserAgent: "ClashX/1.95.1",
 	}
 }
 
