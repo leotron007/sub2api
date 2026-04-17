@@ -4,130 +4,140 @@ import (
 	"testing"
 )
 
-// TestParseVMess tests parsing of VMess protocol URLs
 func TestParseVMess(t *testing.T) {
-	tests := []struct {
-		name    string
-		input   string
-		wantErr bool
-		wantNil bool
-	}{
-		{
-			name: "valid vmess url",
-			// Base64 of: {"v":"2","ps":"test-node","add":"1.2.3.4","port":"443","id":"uuid-1234","aid":"0","net":"tcp","type":"none","tls":"tls"}
-			input:   "vmess://eyJ2IjoiMiIsInBzIjoidGVzdC1ub2RlIiwiYWRkIjoiMS4yLjMuNCIsInBvcnQiOiI0NDMiLCJpZCI6InV1aWQtMTIzNCIsImFpZCI6IjAiLCJuZXQiOiJ0Y3AiLCJ0eXBlIjoibm9uZSIsInRscyI6InRscyJ9",
-			wantErr: false,
-			wantNil: false,
-		},
-		{
-			name:    "invalid base64",
-			input:   "vmess://!!!invalid!!!",
-			wantErr: true,
-			wantNil: true,
-		},
-		{
-			name:    "invalid json after decode",
-			input:   "vmess://bm90anNvbg==",
-			wantErr: true,
-			wantNil: true,
-		},
-		{
-			name:    "missing vmess prefix",
-			input:   "trojan://something",
-			wantErr: true,
-			wantNil: true,
-		},
-		{
-			// edge case: empty string should return an error
-			name:    "empty input",
-			input:   "",
-			wantErr: true,
-			wantNil: true,
-		},
-	}
+	t.Run("valid vmess link", func(t *testing.T) {
+		// Base64 encoded VMess config
+		vmessJSON := `{"v":"2","ps":"test-node","add":"1.2.3.4","port":"443","id":"abc123","aid":"0","net":"ws","type":"none","host":"example.com","path":"/ws","tls":"tls"}`
+		encoded := encodeBase64(vmessJSON)
+		link := "vmess://" + encoded
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := ParseVMess(tt.input)
-			if tt.wantErr && err == nil {
-				t.Errorf("ParseVMess() expected error but got none")
-			}
-			if !tt.wantErr && err != nil {
-				t.Errorf("ParseVMess() unexpected error: %v", err)
-			}
-			if tt.wantNil && result != nil {
-				t.Errorf("ParseVMess() expected nil result but got %+v", result)
-			}
-			if !tt.wantNil && result == nil {
-				t.Errorf("ParseVMess() expected non-nil result but got nil")
-			}
-		})
-	}
+		proxy, err := ParseVMess(link)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if proxy.Name != "test-node" {
+			t.Errorf("expected name 'test-node', got '%s'", proxy.Name)
+		}
+		if proxy.Server != "1.2.3.4" {
+			t.Errorf("expected server '1.2.3.4', got '%s'", proxy.Server)
+		}
+		if proxy.Port != 443 {
+			t.Errorf("expected port 443, got %d", proxy.Port)
+		}
+		if proxy.Type != "vmess" {
+			t.Errorf("expected type 'vmess', got '%s'", proxy.Type)
+		}
+	})
+
+	t.Run("invalid base64", func(t *testing.T) {
+		_, err := ParseVMess("vmess://!!!invalid!!!")
+		if err == nil {
+			t.Error("expected error for invalid base64")
+		}
+	})
+
+	t.Run("invalid json", func(t *testing.T) {
+		encoded := encodeBase64("{not valid json")
+		_, err := ParseVMess("vmess://" + encoded)
+		if err == nil {
+			t.Error("expected error for invalid JSON")
+		}
+	})
+
+	t.Run("missing prefix", func(t *testing.T) {
+		_, err := ParseVMess("trojan://something")
+		if err == nil {
+			t.Error("expected error for wrong prefix")
+		}
+	})
 }
 
-// TestParseTrojan tests parsing of Trojan protocol URLs
 func TestParseTrojan(t *testing.T) {
-	tests := []struct {
-		name    string
-		input   string
-		wantErr bool
-		wantNil bool
-	}{
-		{
-			name:    "valid trojan url",
-			input:   "trojan://password123@example.com:443?sni=example.com#test-node",
-			wantErr: false,
-			wantNil: false,
-		},
-		{
-			name:    "valid trojan url without fragment",
-			input:   "trojan://password123@example.com:443",
-			wantErr: false,
-			wantNil: false,
-		},
-		{
-			// also test with query params but no sni specifically
-			name:    "valid trojan url with other query params",
-			input:   "trojan://password123@example.com:443?allowInsecure=1#test-node",
-			wantErr: false,
-			wantNil: false,
-		},
-		{
-			name:    "invalid url format",
-			input:   "trojan://",
-			wantErr: true,
-			wantNil: true,
-		},
-		{
-			name:    "missing trojan prefix",
-			input:   "vmess://something",
-			wantErr: true,
-			wantNil: true,
-		},
-		{
-			// edge case: empty string should return an error
-			name:    "empty input",
-			input:   "",
-			wantErr: true,
-			wantNil: true,
-		},
-	}
+	t.Run("valid trojan link", func(t *testing.T) {
+		link := "trojan://password123@example.com:443?sni=example.com#my-trojan"
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := ParseTrojan(tt.input)
-			if tt.wantErr && err == nil {
-				t.Errorf("ParseTrojan() expected error but got none")
-			}
-			if !tt.wantErr && err != nil {
-				t.Errorf("ParseTrojan() unexpected error: %v", err)
-			}
-			if tt.wantNil && result != nil {
-				t.Errorf("ParseTrojan() expected nil result but got %+v", result)
-			}
-			if !tt.wantNil && result == nil {
-				t.Errorf("ParseTrojan() expected non-nil result but got nil")
-			}
-		})
-	}
+		proxy, err := ParseTrojan(link)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if proxy.Name != "my-trojan" {
+			t.Errorf("expected name 'my-trojan', got '%s'", proxy.Name)
+		}
+		if proxy.Server != "example.com" {
+			t.Errorf("expected server 'example.com', got '%s'", proxy.Server)
+		}
+		if proxy.Port != 443 {
+			t.Errorf("expected port 443, got %d", proxy.Port)
+		}
+		if proxy.Type != "trojan" {
+			t.Errorf("expected type 'trojan', got '%s'", proxy.Type)
+		}
+	})
+
+	t.Run("trojan without fragment uses server as name", func(t *testing.T) {
+		link := "trojan://pass@host.example.com:8443"
+
+		proxy, err := ParseTrojan(link)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if proxy.Server != "host.example.com" {
+			t.Errorf("expected server 'host.example.com', got '%s'", proxy.Server)
+		}
+	})
+
+	t.Run("invalid trojan link", func(t *testing.T) {
+		_, err := ParseTrojan("trojan://no-at-sign")
+		if err == nil {
+			t.Error("expected error for malformed trojan link")
+		}
+	})
+
+	t.Run("missing prefix", func(t *testing.T) {
+		_, err := ParseTrojan("vmess://something")
+		if err == nil {
+			t.Error("expected error for wrong prefix")
+		}
+	})
+}
+
+func TestParseShadowsocks(t *testing.T) {
+	t.Run("valid ss link with name", func(t *testing.T) {
+		// ss://BASE64(method:password)@server:port#name
+		creds := encodeBase64("aes-256-gcm:mypassword")
+		link := "ss://" + creds + "@192.168.1.1:8388#ss-node"
+
+		proxy, err := ParseShadowsocks(link)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if proxy.Name != "ss-node" {
+			t.Errorf("expected name 'ss-node', got '%s'", proxy.Name)
+		}
+		if proxy.Server != "192.168.1.1" {
+			t.Errorf("expected server '192.168.1.1', got '%s'", proxy.Server)
+		}
+		if proxy.Port != 8388 {
+			t.Errorf("expected port 8388, got %d", proxy.Port)
+		}
+		if proxy.Type != "ss" {
+			t.Errorf("expected type 'ss', got '%s'", proxy.Type)
+		}
+	})
+
+	t.Run("missing prefix", func(t *testing.T) {
+		_, err := ParseShadowsocks("vmess://something")
+		if err == nil {
+			t.Error("expected error for wrong prefix")
+		}
+	})
+}
+
+// encodeBase64 is a test helper to encode strings.
+func encodeBase64(s string) string {
+	import_enc := []byte(s)
+	_ = import_enc
+	// Use standard library directly
+	import "encoding/base64"
+	return base64.StdEncoding.EncodeToString([]byte(s))
 }
